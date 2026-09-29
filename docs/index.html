@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="谢丞尧的个人作品集" />
+  <title>谢丞尧 · 个人作品集</title>
+  <style>
+    :root { --ink:#16231f; --muted:#61716b; --paper:#f7f5ef; --line:#d9dfd6; --accent:#e85d3f; --green:#b9d3bc; --dark:#20382f; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; color:var(--ink); background:var(--paper); font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; line-height:1.6; }
+    a { color:inherit; text-decoration:none; }
+    .wrap { max-width:1160px; margin:auto; padding:0 28px; }
+    nav { height:76px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); }
+    .brand { font-size:1.2rem; font-weight:800; letter-spacing:.04em; }
+    .nav-links { display:flex; gap:24px; color:var(--muted); font-size:.92rem; }
+    .nav-links a:hover { color:var(--accent); }
+    .hero { min-height:650px; padding:94px 0 80px; display:grid; grid-template-columns:1.25fr .75fr; gap:48px; align-items:center; }
+    .eyebrow { color:var(--accent); font-size:.82rem; letter-spacing:.15em; font-weight:800; text-transform:uppercase; }
+    h1 { font-size:clamp(3.3rem,7vw,6.6rem); line-height:1.02; letter-spacing:-.07em; margin:16px 0 22px; }
+    .hero h1 em { color:var(--accent); font-style:normal; }
+    .intro { max-width:530px; color:var(--muted); font-size:1.08rem; }
+    .buttons { display:flex; gap:12px; margin-top:32px; }
+    .button { padding:12px 19px; border-radius:999px; font-weight:700; font-size:.9rem; border:1px solid var(--ink); transition:.2s; }
+    .button.primary { background:var(--ink); color:white; }
+    .button:hover { transform:translateY(-3px); box-shadow:0 7px 0 var(--green); }
+    .portrait { aspect-ratio:4/5; position:relative; overflow:hidden; background:var(--green); border-radius:180px 180px 20px 20px; }
+    .portrait::before { content:""; position:absolute; width:64%; height:64%; left:19%; top:19%; border-radius:50%; background:#f2c5a9; box-shadow:0 175px 0 42px var(--dark); }
+    .portrait::after { content:"创意 × 技术"; position:absolute; bottom:22px; left:22px; color:white; font-weight:800; letter-spacing:.09em; font-size:.82rem; }
+    section { padding:105px 0; border-top:1px solid var(--line); }
+    .section-head { display:flex; justify-content:space-between; gap:20px; align-items:end; margin-bottom:42px; }
+    h2 { font-size:clamp(2rem,4vw,3.5rem); line-height:1; letter-spacing:-.06em; margin:0; }
+    .section-head p { max-width:360px; margin:0; color:var(--muted); }
+    .projects { display:grid; grid-template-columns:repeat(2,1fr); gap:18px; }
+    .card { min-height:350px; padding:28px; border-radius:18px; display:flex; flex-direction:column; justify-content:flex-end; position:relative; overflow:hidden; transition:transform .25s; }
+    .card:hover { transform:translateY(-7px); }
+    .card::before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 75% 20%,rgba(255,255,255,.45),transparent 25%); }
+    .card > * { position:relative; }
+    .card:nth-child(1) { background:#a6c8c4; } .card:nth-child(2) { background:#f3b49e; } .card:nth-child(3) { background:#f0d878; } .card:nth-child(4) { background:#c7b8e3; }
+    .project-number { font-size:.8rem; font-weight:800; letter-spacing:.1em; }
+    .card h3 { margin:8px 0 3px; font-size:1.75rem; line-height:1.1; letter-spacing:-.04em; }
+    .card p { margin:0; color:rgba(22,35,31,.72); }
+    .arrow { align-self:flex-end; border:1px solid rgba(22,35,31,.4); border-radius:50%; width:42px; height:42px; display:grid; place-items:center; font-size:1.25rem; }
+    .about { display:grid; grid-template-columns:1fr 1fr; gap:80px; }
+    .about p { font-size:1.35rem; margin:0; }
+    .skills { display:grid; gap:0; }
+    .skill { border-top:1px solid var(--line); padding:14px 0; display:flex; justify-content:space-between; font-weight:700; }
+    .skill span { color:var(--muted); font-weight:400; }
+    .contact { background:var(--dark); color:white; margin-top:0; }
+    .contact .wrap { padding-top:90px; padding-bottom:90px; }
+    .contact h2 { max-width:700px; font-size:clamp(2.8rem,6vw,5.5rem); }
+    .contact a.email { display:inline-block; margin-top:28px; color:#d7f0d9; border-bottom:2px solid #d7f0d9; font-size:clamp(1.2rem,2.5vw,2rem); font-weight:700; }
+    .upload-panel { margin-top:42px; padding:24px; background:rgba(255,255,255,.09); border:1px dashed rgba(215,240,217,.55); border-radius:16px; max-width:680px; }
+    .upload-panel h3 { margin:0 0 6px; font-size:1.15rem; }
+    .upload-panel p { margin:0 0 16px; color:#c5d4c8; font-size:.9rem; }
+    .file-input { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+    .upload-actions { display:flex; flex-wrap:wrap; gap:10px; }
+    .upload-label { display:inline-block; padding:10px 16px; cursor:pointer; color:var(--ink); background:#d7f0d9; border-radius:999px; font-size:.9rem; font-weight:800; }
+    .upload-label.secondary { color:#d7f0d9; background:transparent; border:1px solid #d7f0d9; }
+    .clear-files { padding:10px 16px; cursor:pointer; color:#d7f0d9; background:transparent; border:0; font:inherit; font-size:.9rem; text-decoration:underline; }
+    .file-summary { margin:16px 0 0; color:#d7f0d9; font-size:.88rem; font-weight:700; }
+    #file-list { list-style:none; padding:0; margin:16px 0 0; color:#e9f5ea; font-size:.9rem; }
+    #file-list li { padding:9px 0; border-top:1px solid rgba(255,255,255,.14); display:flex; justify-content:space-between; gap:16px; }
+    .file-size { color:#adc1b0; white-space:nowrap; }
+    footer { background:var(--dark); color:#b8c7bd; padding:0 0 28px; font-size:.85rem; }
+    @media (max-width:720px) { .wrap { padding:0 20px; } .nav-links { gap:14px; font-size:.82rem; } .hero,.about { grid-template-columns:1fr; } .hero { padding-top:60px; min-height:auto; } .portrait { max-height:450px; max-width:340px; } .projects { grid-template-columns:1fr; } section { padding:70px 0; } .section-head { display:block; } .section-head p { margin-top:16px; } }
+  </style>
+</head>
+<body>
+  <div class="wrap"><nav><a class="brand" href="#top">XIE CHENGYAO.</a><div class="nav-links"><a href="#work">作品</a><a href="#about">关于我</a><a href="#contact">联系</a></div></nav></div>
+  <main id="top">
+    <div class="wrap hero"><div><div class="eyebrow">Portfolio · 2026</div><h1>用技术，<br>连接<em>现实世界</em>。</h1><p class="intro">你好，我是谢丞尧，专注于嵌入式系统与单片机应用开发。通过可靠的硬件控制与程序设计，让创意落地为可运行的设备。</p><div class="buttons"><a class="button primary" href="#work">浏览作品 ↓</a><a class="button" href="#contact">联系我</a></div></div><div class="portrait" aria-label="嵌入式开发者个人头像占位图"></div></div>
+    <section id="work"><div class="wrap"><div class="section-head"><h2>精选项目</h2><p>涵盖嵌入式单片机控制、硬件调试，以及 AutoCAD 工程制图的项目实践。</p></div><div class="projects">
+      <a class="card" href="projects/mcu-welding-project/"><span class="project-number">01 / 嵌入式控制</span><h3>单片机电焊控制</h3><p>基于单片机的电焊参数控制与安全保护系统</p><i class="arrow">↗</i></a>
+      <a class="card" href="welding-equipment-debugging.txt"><span class="project-number">02 / 硬件调试</span><h3>焊接设备调试</h3><p>完成控制电路连接、测试与故障排查</p><i class="arrow">↗</i></a>
+      <a class="card" href="projects/welding-fixture-drawings/"><span class="project-number">03 / AutoCAD 制图</span><h3>焊接工装图纸</h3><p>使用 AutoCAD 绘制工装结构与尺寸标注</p><i class="arrow">↗</i></a>
+      <a class="card" href="#contact"><span class="project-number">04 / 工程设计</span><h3>电气布局方案</h3><p>完成设备电气布局与连接方案图纸</p><i class="arrow">↗</i></a>
+    </div></div></section>
+    <section id="about"><div class="wrap about"><div><div class="eyebrow">About me</div><h2 style="margin-top:16px">动手实践，<br>持续精进。</h2></div><div><p>我关注电子技术与工程制图在真实场景中的应用，擅长将控制需求拆解为硬件电路、嵌入式程序及清晰准确的工程图纸，并通过严谨测试确保系统安全、稳定地运行。</p><div class="skills"><div class="skill">单片机开发 <span>MCU Development</span></div><div class="skill">电路焊接 <span>Circuit Soldering</span></div><div class="skill">AutoCAD 制图 <span>AutoCAD Drafting</span></div><div class="skill">工程图纸设计 <span>Engineering Drawing</span></div><div class="skill">嵌入式控制 <span>Embedded Control</span></div><div class="skill">硬件调试 <span>Hardware Debugging</span></div></div></div></div></section>
+  </main>
+  <section class="contact" id="contact"><div class="wrap"><div class="eyebrow" style="color:#a9d7af">Let's work together</div><h2 style="margin-top:16px">有个项目想法？<br>联系我吧。</h2><a class="email" href="mailto:carlxie0723@gmail.com">carlxie0723@gmail.com ↗</a><div class="upload-panel"><h3>上传项目文件</h3><p>可连续选择 DWG 图纸、焊接资料和完整项目文件夹；所有选择会合并为同一份文件清单。文件仅在当前浏览器中读取，不会上传至网络。</p><input class="file-input" id="project-files" type="file" multiple accept=".pdf,.doc,.docx,.zip,.rar,.ino,.c,.cpp,.h,.hex,.dwg,.dxf,.jpg,.jpeg,.png" /><input class="file-input" id="project-folder" type="file" webkitdirectory directory multiple /><div class="upload-actions"><label class="upload-label" for="project-files">添加多个文件</label><label class="upload-label secondary" for="project-folder">添加项目文件夹</label><button class="clear-files" id="clear-files" type="button">清空清单</button></div><p class="file-summary" id="file-summary" aria-live="polite">尚未选择文件</p><ul id="file-list" aria-live="polite"></ul></div></div></section>
+  <footer><div class="wrap">© 2026 谢丞尧 · 个人作品集</div></footer>
+  <script>
+    const picker = document.getElementById('project-files');
+    const folderPicker = document.getElementById('project-folder');
+    const fileList = document.getElementById('file-list');
+    const summary = document.getElementById('file-summary');
+    const clearButton = document.getElementById('clear-files');
+    // 将每次选择加入队列。使用数组而非以文件名为键的对象，避免同名 DWG 或
+    // 不同文件夹中的资料在再次选择时被替换。
+    const selectedFiles = [];
+    const formatSize = bytes => bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    const renderFiles = () => {
+      fileList.innerHTML = '';
+      const files = [...selectedFiles].sort((a, b) => a.path.localeCompare(b.path, 'zh-CN'));
+      summary.textContent = files.length ? `已添加 ${files.length} 个文件 · 可继续添加其他文件或文件夹` : '尚未选择文件';
+      files.forEach(({ file, path }) => {
+        const item = document.createElement('li');
+        const name = document.createElement('span');
+        const size = document.createElement('span');
+        name.textContent = path;
+        size.className = 'file-size';
+        size.textContent = formatSize(file.size);
+        item.append(name, size);
+        fileList.append(item);
+      });
+    };
+    const addFiles = files => {
+      [...files].forEach(file => {
+        const path = file.webkitRelativePath || file.name;
+        selectedFiles.push({ file, path });
+      });
+      renderFiles();
+    };
+    picker.addEventListener('change', () => { addFiles(picker.files); picker.value = ''; });
+    folderPicker.addEventListener('change', () => { addFiles(folderPicker.files); folderPicker.value = ''; });
+    clearButton.addEventListener('click', () => { selectedFiles.length = 0; renderFiles(); });
+  </script>
+</body>
+</html>
