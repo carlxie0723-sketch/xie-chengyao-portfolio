@@ -1,0 +1,670 @@
+焊接设备调试记录
+================
+
+项目：焊接设备调试
+
+调试内容：
+1. 检查控制电路连接与供电状态。
+2. 测试电焊参数设定与显示功能。
+3. 排查异常工作状态并确认保护模块响应。
+
+可在此文件中继续补充调试日期、故障现象、处理方法与测试结果。
+#include "mbed.h"
+
+// 硬件对象声明
+DigitalOut myled(LED1);
+BusIn pushButtons(p21, p22, p23);
+
+// 适配 Mbed OS 6+ 的串口通信 (9600波特率)
+BufferedSerial pc(USBTX, USBRX, 9600);
+
+// 将 printf 重定向到 BufferedSerial，否则 printf 无输出
+FileHandle *mbed::mbed_default_serial_console(uintptr_t min_buffer_size)
+{
+    return &pc;
+}
+
+void processPushButtons()
+{
+    static bool buttonBeenReleased = true;
+
+    // 使用 int 存储 read() 返回值，避免窄化转换警告
+    int prevState = pushButtons.read();
+    ThisThread::sleep_for(20ms); // RTOS 去抖延时
+    int nextState = pushButtons.read();
+
+    if (prevState == nextState)
+    {
+        // 低电平有效（Active-Low）：反转并屏蔽提取低3位
+        int buttonStates = (~nextState & 0x07);
+
+        if (buttonStates == 0x00)
+        {
+            buttonBeenReleased = true; // 所有按键释放后，重置锁存状态
+        }
+        else if (buttonBeenReleased)
+        {
+            buttonBeenReleased = false; // 触发后锁定，防止长按连续触发
+
+            printf("button states: %02X\r\n", buttonStates);
+
+            switch (buttonStates)
+            {
+                case 0x01:
+                    printf(" change modes\r\n");
+                    break;
+                case 0x02:
+                    printf(" decrement\r\n");
+                    break;
+                case 0x04:
+                    printf(" increment\r\n");
+                    break;
+                default:
+                    printf("get your fat fingers off more than 1 button\r\n");
+                    break;
+            }
+        }
+    }
+}
+
+int main()
+{
+    // 配置按键引脚为内部上拉模式
+    pushButtons.mode(PullUp);
+    int loopCounter = 0;
+
+    while (1)
+    {
+        processPushButtons();
+
+        // 利用按键检测的 20ms 周期进行计数，实现约 500ms 的 LED 翻转
+        loopCounter++;
+        if (loopCounter >= 25) // 25 * 20ms = 500ms
+        {
+            myled = !myled;
+            loopCounter = 0;
+        }
+    }
+}
+include "mbed.h"
+
+DigitalOut myled(LED1);
+DigitalIn pushButton(p21);
+BufferedSerial pc(USBTX, USBRX, 9600);
+
+// 将 printf 重定向到 BufferedSerial，否则 printf 无输出
+FileHandle *mbed::mbed_default_serial_console(uintptr_t min_buffer_size)
+{
+    return &pc;
+}
+
+int main()
+{
+    pushButton.mode(PullUp);
+
+    bool lastSteadyState = true; // 上一次稳定的按键状态 (默认 PullUp 为 true)
+    bool currentState = true;    // 当前读取的状态
+
+    while (1)
+    {
+        currentState = pushButton.read();
+
+        // 两次读取之间加入延时以避开抖动
+        ThisThread::sleep_for(20ms);
+
+        // 只有当当前状态与上一轮的稳定状态不一致时，才说明发生了状态改变
+        if (currentState != lastSteadyState)
+        {
+            // 确认新状态已稳定（再次校验）
+            if (pushButton.read() == currentState)
+            {
+                lastSteadyState = currentState; // 更新稳定状态
+
+                // 判断是否为按下边沿 (Active-Low: false 代表按下)
+                if (currentState == false)
+                {
+                    myled = !myled;
+                    printf("LED status: %s\r\n", myled ? "ON" : "OFF");
+                }
+            }
+        }
+    }
+}
+def curCalc():
+    print("Ohm's Law-- Current Calculation")
+    voltage = float(input("What is voltage in volts? "))
+    ohm = float(input("What is resistance in ohms? "))
+    current = voltage/ohm
+    print("The current is:", round(current,2),"amperes.")
+def volCalc():
+    print("Ohm's Law--Voltage Calculation")
+    current = float(input("What is current in amperes? "))
+    ohm = float(input("What is resistance in ohms? "))
+    voltage= current*ohm
+    print("The voltage is:", round(voltage,2),"volts.")
+def resCalc():
+    print("Ohm's Law--Resistance Calculation")
+    voltage = float(input("What is voltage in volts? "))
+    current = float(input("What is current in amperes? "))
+    ohm=voltage/current
+    print("The resistance is: ", round(ohm,1),"ohms.")
+def paraRes(r1,r2):
+    parallel = 1/r1+1/r2
+    rt=1/parallel
+    return rt
+def seriRes(r1,r2):
+    rt=r1+r2
+    return rt
+def diag(scaleL, scaleW, length, width):
+    import math
+    diagonal= math.sqrt((scaleL*length)**2+(scaleW*width)**2)
+    return round(diagonal,2)
+def division (dividend,divisor):
+    quotient = dividend//divisor
+    remainder= dividend%divisor
+    return (quotient, remainder)
+def stringCheck (inString):
+    print("String check: -----")
+    print(inString, "isalnum():", inString.isalnum())
+    print(inString, "isalpha():", inString.isalpha())
+    print(inString, "isdecimal():", inString.isdecimal())
+def isFloat (num):
+    try:
+        float(num)
+        return True
+    except ValueError:
+        return False
+def singleSelect():
+    num=int(input("Type in 1, 2 or 3:"))
+    if num ==1:
+        print("You entered 1.")
+    print("Goodbye!")
+def doubleSelect():
+    num=int(input("Type in 1, 2 or 3:"))
+    if num==1:
+        print("You entered 1.")
+    else:
+        print("You entered other than 1.")
+    print("Goodbye!")
+def multipleSelect():
+    num=int(input("Type in 1, 2 or 3: "))
+    if num==1:
+        print("You entered 1.")
+    elif num==2:
+        print("You entered 2.")
+    elif num==3:
+        print("You entered 3.")
+    print("Goodbye!")
+def multipleWithElse():
+    num=int(input("Type in 1, 2 or 3: "))
+    if num==1:
+        print("You entered 1.")
+    elif num==2:
+        print("You entered 2.")
+    elif num==3:
+        print("You entered 3.")
+    else:
+        print("You entered other than 1, 2 and 3.")
+    print("Goodbye!")
+def serialIf():
+    num=int(input("Type in 1, 2 or 3: "))
+    if num==1:
+        print("You entered 1.")
+    if num==2:
+        print("You entered 2.")
+    if num==3:
+        print("You entered 3.")
+    else:
+        print("You entered other than 1, 2 and 3.")
+    print("Goodbye!")
+def payCalc_1():
+    hrpay=int(input("How much do you earn per hour?" ))
+    hrperw=int(input("How many hours a week do you work?" ))
+    wpay=hrpay*hrperw
+    print("Your weely pay is: ", wpay)
+    if wpay>400:
+        print("You can afford to live alone.")
+def payCalc_2():
+    hrpay=int(input("How much do you earn per hour?" ))
+    hrperw=int(input("How many hours a week do you work?" ))
+    wpay=hrpay*hrperw
+    print("Your weely pay is: ", wpay)
+    if wpay>400:
+        print("You can afford to live alone.")
+    else:
+        print("You can not afford to live alone.")
+def greater(num1,num2):
+    if num1>num2:
+        return num1
+    else:
+        return num2
+def less(num1,num2):
+    if num1>num2:
+        return num2
+    else:
+        return num1
+def nestedIf():
+    day=input("Is today a weekend or weekday? ")
+    mood=input("How are you feeling today? ")
+    if mood== "happy":
+        if day=="weekend":
+            print("I'm glad you're enjoyng your weekend.")
+        elif day=="weekday":
+            print("Cool, you must enjoy your job!")
+    elif mood=="sad":
+        if day=="weekend":
+            print("Cheer up! It's the weekend!")
+        elif day=="weekday":
+            print("Hopefully you are happier in the weekend!")
+def booleanComp():
+    day=input("Is today a weekend or weekday? ")
+    mood=input("How are you feeling today? ")
+    if mood== "happy" and day=="weekend":
+        print("I'm glad you're enjoyng your weekend.")
+    elif day=="weekday" and mood== "happy":
+        print("Cool, you must enjoy your job!")
+    elif mood=="sad" and day=="weekend":
+        print("Cheer up! It's the weekend!")
+    else:
+        print("Hopefully you are happier in the weekend!")
+def leapyear():
+    year=int(input("Please enter the year: "))
+    if  year%4!=0 or year%100==0 and year%400!=0:
+        print("The year of ",year," is NOT a leap year.")
+    else:
+        print("The year of ",year," is a leap year.")
+def greatest(num1,num2,num3):
+    if num1>=num2 and num1>=num3:
+        return num1
+    elif num2>=num1 and num2>=num3:
+        return num2
+    else:
+        return num3
+def lest(num1,num2,num3):
+    if num1<=num2 and num1<=num3:
+        return num1
+    elif num2<=num1 and num2<=num3:
+        return num2
+    else:
+        return num3
+def fromIf():
+    counter=0
+    if counter<5:
+        print("Hello from if statement --",counter)
+        counter = counter+1
+def fromWhile():
+    counter=0
+    while counter<5:
+        print("Hello from while statement --",counter)
+        counter = counter+1
+def whileEnding():
+    num=0
+    while num<1 or num>3:
+        num=int(input("Type in 1, 2 or 3:"))
+    print("You entered: " ,num)
+def whileBreak():
+    while True:
+        num=int(input("Type in 1, 2 or 3:"))
+        if num>=1 and num<=3:
+            break
+    print("You entered: ",num)
+def GCD():
+    x=int(input("a: "))
+    y=int(input("b: "))
+    while y!=0:
+        r=x%y
+        x=y
+        y=r
+    print("GCD: ",x)
+def DotB_v1():
+    d=int(input("Decimal: "))
+    print("Binary: ",end='')
+    q,r=division(d,2)
+    while q!=0:
+        print(r,end='')
+        q,r=division(q,2)
+    if r!=0:
+        print(r)
+def prime():
+    n=int(input("Input n : "))
+    i=1
+    count=0
+    while i<=n:
+        if n%i==0:
+            count=count+1
+        i=i+1
+    if count==2:
+        print(n,"is a prime number")
+    else:
+        print(n," is NOT a prime number")
+def fromFor():
+    for counter in range(5):
+        print("Hello from for statement --",counter)
+def printEven():
+    count=0
+    for i in range(5):
+        print(count)
+        count=count+2
+def guessNumber():
+    import random
+    secretNumber = random.randint(1, 20)
+    print('I am thinking of a number between 1 and 20.')
+    for guessesTaken in range(1, 7):
+        print('Take a guess.')
+        guess = int(input())
+        if guess < secretNumber:
+            print('Your guess is too low.')
+        elif guess > secretNumber:
+            print('Your guess is too high.')
+        else:
+            break    
+    if guess == secretNumber:
+        print('Good job! You guessed my number in ' + str(guessesTaken) + ' guesses!')
+    else:
+        print('Nope. The number I was thinking of was ' + str(secretNumber))
+def enterFloat():
+    for i in range(1, 4):
+        print("Enter a float number (attempt",i,end='')
+        num=input("): ")
+        if isFloat(num)==True:
+            break
+    if isFloat(num)==True:
+        print("Ok,float number:",num,"at attempt",i)
+    else:
+        print("No, you didn't enter a float number.")    
+def nestedFor():
+    for row in range(5):
+        print("row:", row, end="\t",)
+        for col in range(5):
+            print("x", end='')
+        print()
+    print("done!")
+def bottomLeftJustified():
+    for row in range(5):
+        print("row:", row, end="\t",)
+        for col in range(row+1):
+            print("x", end='')
+        print()
+    print("done!")
+def topRightJustified():
+    for row in range(5):
+        print("row:",row,end="\t",)
+        for space in range(row):
+            print(' ',end='')
+        for col in range(5-row):
+            print("x", end='')
+        print()
+    print("done!")
+def bottomRightJustified():
+    for row in range(5):
+        print("row:",row,end="\t",)
+        for space in range(4-row):
+            print(' ',end='')
+        for col in range(row+1):
+            print("x", end='')
+        print()
+    print("done!")
+def topLeftJustified():
+    for row in range(5):
+        print("row:",row,end="\t",)
+        for col in range(5-row):
+            print("x", end='')
+        print()
+    print("done!")
+def diamond():
+    num=int(input("Input the size of the diamond:" ))
+    if num<3:
+        print("can Not draw a diamond")
+    elif num%2==0:
+        num=num+1
+    row=num//2
+    for i in range(row+1):
+        j=2*i+1
+        print("#ohx: ",j,"\t",end='')
+        for space in range(row-i):
+            print(' ', end='')
+        for col in range(j):
+            print("x", end='')
+        print()
+    for i in range(row):
+        j=-2*i+num-2
+        print("#ohx: ",j,"\t",end='')
+        for space in range(i+1):
+            print(' ', end='')
+        for col in range(j):
+            print("x", end='')
+        print()
+def dividerV(r1,r2,Vs):
+    portion=r1/(r1+r2)
+    Vout=round(Vs*portion,2)
+    return Vout
+def dividerI(r1,r2,It):
+    portion=r1/(r1+r2)
+    I2=round(It*portion,2)
+    return I2
+def collatz(num):
+    print(num)
+    if num%2==0:
+        num=num//2
+        return num
+    else:
+        num=3*num+1
+        return num
+def allMyCats2():
+    catNames = []
+    while True:
+        print('Enter the name of cat ' + str(len(catNames) + 1) +' (Or enter nothing to stop.):')
+        name = input()
+        if name == '':
+            break
+        catNames = catNames + [name] # list concatenation
+    print('The cat names are:')
+    for name in catNames:
+        print('  ' + name)
+def allMyCats3(cats):
+    while True:
+        print('Enter the name of cat ' + str(len(cats) + 1) +' (Or enter nothing to stop.):')
+        name = input()
+        if name == '':
+            break
+        cats.append(name) # list concatenation
+def resEntry(res):
+    while True:
+        print('Resistor'+str(len(res)+1)+'(Or enter nothing to stop.):')
+        num=input()
+        if num=='':
+            break
+        res.append(float(num))
+def paraRes_v2(res):
+    paraRes=0
+    for r in res:
+        paraRes=paraRes + 1/r
+    rt=1/paraRes
+    return rt
+def seriRes_v2(res):
+    seriRes=0
+    for r in res:
+        seriRes=seriRes + r
+    return seriRes
+def DotB_v2(d,b):
+    q,r=division(d,2)
+    while q!=0:
+        b.insert(0,r)
+        q,r=division(q,2)
+    if r!=0:
+        b.insert(0,r)
+def listToStr(binary):
+    string=''
+    for i in binary:
+        string=string+str(i)
+    return string
+def NumberEntry(num):
+    while True:
+        print('Enter the number'+str(len(num)+1)+'(Or enter nothing to stop.):')
+        number=input()
+        if number=='':
+            break
+        num.append(float(number))
+def NumberMin(num):
+    num.sort()
+    nMin=num[0]
+    return nMin
+def NumberMax(num):
+    num.sort(reverse=True)
+    nMax=num[0]
+    return nMax
+def NumberSum(num):
+    nsum=0
+    for i in num:
+        nsum=nsum+i
+    return nsum
+def NumberAve(num):
+    nave=NumberSum(num)/len(num)
+    return nave
+针对上一轮评估中提出的问题，以下是具体的**代码修改建议与优化后的重构代码**：
+
+**重点修改说明**
+
+* **修正逻辑 Bug：**
+* `serialIf()`：将独立的 `if` 改为 `elif`，解决输入 `1` 却触发 `else` 的问题。
+* `leapyear()`：修正运算符优先级与逻辑，确保 2000 年（世纪闰年）等判断准确。
+
+
+* **消除副作用 (In-place Mutation)：**
+* `NumberMin()` / `NumberMax()`：改用 Python 内置的 `min()` 和 `max()`，避免 `num.sort()` 破坏原始列表顺序。
+
+
+* **提高健壮性 (异常与除零保护)：**
+* `enterFloat()`：预先声明 `num = None`，防止变量未定义错误。
+* `NumberAve()`：增加空列表检查，防止 `ZeroDivisionError`。
+* `curCalc()` / `resCalc()` / `paraRes()`：加入分母非零校验。
+
+
+
+---
+
+**优化后的重构代码**
+
+```python
+import math
+import random
+
+# ==================== 1. 电路与数学计算 (增加除零保护) ====================
+
+def curCalc():
+    print("Ohm's Law-- Current Calculation")
+    voltage = float(input("What is voltage in volts? "))
+    ohm = float(input("What is resistance in ohms? "))
+    if ohm == 0:
+        print("Error: Resistance cannot be zero.")
+        return
+    current = voltage / ohm
+    print("The current is:", round(current, 2), "amperes.")
+
+def volCalc():
+    print("Ohm's Law--Voltage Calculation")
+    current = float(input("What is current in amperes? "))
+    ohm = float(input("What is resistance in ohms? "))
+    voltage = current * ohm
+    print("The voltage is:", round(voltage, 2), "volts.")
+
+def resCalc():
+    print("Ohm's Law--Resistance Calculation")
+    voltage = float(input("What is voltage in volts? "))
+    current = float(input("What is current in amperes? "))
+    if current == 0:
+        print("Error: Current cannot be zero.")
+        return
+    ohm = voltage / current
+    print("The resistance is: ", round(ohm, 1), "ohms.")
+
+def paraRes(r1, r2):
+    if r1 == 0 or r2 == 0 or (r1 + r2) == 0:
+        return 0.0
+    parallel = 1/r1 + 1/r2
+    rt = 1 / parallel
+    return rt
+
+def seriRes(r1, r2):
+    return r1 + r2
+
+def diag(scaleL, scaleW, length, width):
+    diagonal = math.sqrt((scaleL * length)**2 + (scaleW * width)**2)
+    return round(diagonal, 2)
+
+def division(dividend, divisor):
+    if divisor == 0:
+        raise ZeroDivisionError("Divisor cannot be zero.")
+    quotient = dividend // divisor
+    remainder = dividend % divisor
+    return (quotient, remainder)
+
+# ==================== 2. 条件控制 (修复逻辑 Bug) ====================
+
+def serialIf():
+    num = int(input("Type in 1, 2 or 3: "))
+    if num == 1:
+        print("You entered 1.")
+    elif num == 2:  # 修改：将独立 if 改为 elif
+        print("You entered 2.")
+    elif num == 3:  # 修改：将独立 if 改为 elif
+        print("You entered 3.")
+    else:
+        print("You entered other than 1, 2 and 3.")
+    print("Goodbye!")
+
+def leapyear():
+    year = int(input("Please enter the year: "))
+    # 修改：纠正闰年判断逻辑
+    if (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0):
+        print("The year of ", year, " is a leap year.")
+    else:
+        print("The year of ", year, " is NOT a leap year.")
+
+# ==================== 3. 循环与输入验证 (提高稳定性) ====================
+
+def enterFloat():
+    num = None  # 修改：预先声明变量，避免 UnboundLocalError
+    for i in range(1, 4):
+        print("Enter a float number (attempt", i, end='')
+        temp_input = input("): ")
+        if isFloat(temp_input):
+            num = temp_input
+            break
+            
+    if num is not None and isFloat(num):
+        print("Ok, float number:", num, "at attempt", i)
+    else:
+        print("No, you didn't enter a float number.")
+
+def isFloat(num):
+    try:
+        float(num)
+        return True
+    except ValueError:
+        return False
+
+# ==================== 4. 列表与统计 (消除副作用) ====================
+
+def NumberMin(num):
+    if not num:
+        return None
+    return min(num)  # 修改：改用 min()，不改变原列表顺序
+
+def NumberMax(num):
+    if not num:
+        return None
+    return max(num)  # 修改：改用 max()，不改变原列表顺序
+
+def NumberSum(num):
+    return sum(num)  # 修改：简化为 Python 内置 sum 函数
+
+def NumberAve(num):
+    if not num:  # 修改：防止空列表导致除零错误
+        return 0.0
+    return NumberSum(num) / len(num)
+        
+            
+    
+
+    
